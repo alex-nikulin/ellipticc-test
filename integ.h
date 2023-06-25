@@ -4,8 +4,9 @@
 #include <iostream>
 
 using namespace boost::multiprecision;
-typedef int256_t int_t;
-class ElPoint;
+typedef uint256_t int_t;
+class ECPoint;
+
 class ModInt {
 private:
     int_t _field;
@@ -18,15 +19,25 @@ public:
         Mod();
     }
 
+    ModInt(int value)
+        :_field((int_t)value)
+    {
+        Mod();
+    }
+
     ModInt()
         :_field(0)
     {}
 
-    void SetField (int_t q) {
+    void SetQ (int_t q) {
         ModInt::_q = q;
     }
 
-    int_t GetField() {
+    int_t GetQ() {
+        return _q;
+    }
+
+    int_t GetValue() {
         return _field;
     }
 
@@ -39,27 +50,58 @@ public:
     friend ModInt operator/ (const ModInt& a, const ModInt& b);
     friend ModInt pow(const ModInt& a, const ModInt& b);
     friend ModInt pow(const ModInt& a, const int& b);
-    friend ElPoint operator*(const ModInt& k, const ElPoint& P);
+    friend ECPoint operator*(const ModInt& k, const ECPoint& P);
+    friend ModInt operator& (const ModInt& a, const int_t& b);
+    friend ModInt operator| (const ModInt& a, const int_t& b);
+    friend bool operator== (const ModInt& a, const ModInt& b);
 
+    explicit operator int_t() {
+        return _field;
+    }
     
+    ModInt& operator&= (const int_t& rhs) {
+        this->_field &= rhs;
+        return *this;
+    }
+
+    ModInt& operator|= (const int_t& rhs) {
+        this->_field |= rhs;
+        return *this;
+    }
+
     ModInt ExtEuclid() const {
-        int_t old_r = _field;
-        int_t r = ModInt::_q;
-        int_t old_s = 1;
-        int_t s = 0;
+        int512_t old_r = _field;
+        int512_t r = ModInt::_q;
+        int512_t old_s = 1;
+        int512_t s = 0;
+
+        int step = 0;
+        std::cout << std::dec;
 
         while (r != 0) {
-            int_t quot = old_r / r;
-            int_t tmp_r = r;
-            int_t tmp_s = s;
+            ++step;
+            int512_t quot = old_r / r;
+            int512_t tmp_r = r;
+            int512_t tmp_s = s;
             r = old_r - quot * r;
             s = old_s - quot * s;
             old_r = tmp_r;
             old_s= tmp_s;
         }
 
+        if (old_s < 0) {
+            old_s += ModInt::_q;
+        }
+        
+        if (ModInt((int_t)old_s) * ModInt(_field) == ModInt(1)) {
+            std::cout << "reverse successful! " << (ModInt((int_t)old_s) * ModInt(_field))._field << "\n\n\n";
+        }
+        else {
+            std::cout << "reverse unsuccessful! " << (ModInt((int_t)old_s) * ModInt(_field))._field << "\n\n\n";
+        }
+
         if (old_r == 1) {
-            return ModInt(old_s);
+            return ModInt((int_t)old_s);
         }
         else throw "no inverse exists!";
     }
@@ -69,6 +111,13 @@ public:
         if (_field < 0) {
             _field += _q;
         }
+    }
+
+    bool IsEven() {
+        if (_field%2==0) {
+            return true;
+        }
+        return false;
     }
 };
 
@@ -128,11 +177,11 @@ ModInt operator* (const ModInt& a, const ModInt& b) {
 }
 
 ModInt operator/(const ModInt& a, const ModInt& b) {
-    return ModInt(a._field / b._field);
+    return a * pow(b,-1);
 }
 
 ModInt pow(const ModInt& a, const ModInt& b) {
-    std::cout << "here\n";
+    // std::cout << "here\n";
     std::vector<short> bin_array;
     int_t tmp = b._field;
     bin_array.push_back((short)(tmp % 2));
@@ -143,10 +192,10 @@ ModInt pow(const ModInt& a, const ModInt& b) {
     }
     bin_array.push_back((short)tmp);
     
-    for (int i = 0; i < bin_array.size(); i++) {
-        std::cout << bin_array[i] << " ";
-    }
-    std::cout << std::endl;
+    // for (int i = 0; i < bin_array.size(); i++) {
+    //     std::cout << bin_array[i] << " ";
+    // }
+    // std::cout << std::endl;
 
     ModInt r = ModInt(1);
     ModInt m = ModInt(a._field);
@@ -169,3 +218,14 @@ ModInt pow(const ModInt& a, const int& b) {
     return pow(a, power);
 }
 
+ModInt operator& (const ModInt& a, const int_t& b) {
+    return a._field & b;
+}
+
+ModInt operator| (const ModInt& a, const int_t& b) {
+    return a._field | b;
+}
+
+bool operator== (const ModInt& a, const ModInt& b) {
+    return a._field == b._field;
+}
