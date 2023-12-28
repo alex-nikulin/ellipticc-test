@@ -2,18 +2,6 @@
 #include <iostream>
 #include <bitset>
 
-void PrintInt(int_t a) {
-    for (int_t i = 1, m = 1; i <= 256; ++i) {
-        if ((a & m) != 0) {
-            std::cout << 1;
-        }
-        else std::cout << 0;
-        if (i%8 == 0) std::cout << " ";
-        if (i%64 == 0) std::cout << "\n";
-        m <<= 1;
-    }
-}
-
 class ECPoint {
 public:
     ModInt _x;
@@ -46,34 +34,23 @@ public:
             sig_bit <<= 255;
         }
 
+        y &= ~mask;
+
         ModInt u = y*y - 1;
         ModInt v = _d*y*y + 1;
         ModInt z = u * pow(v,3) * pow(u*pow(v,7),(u.GetQ()-5)/8);
         ModInt vz2 = v*z*z;
 
         if (vz2 == u) {
-            std::cout << "vz^2 == u\n";
             x = z;
         }
         else if (vz2 == -u) {
-            std::cout << "vz^2 == -u\n";
             x = z * pow(2, (z.GetQ()-1)/4);
         }
 
-        if (x*x == u/v) {
-            std::cout << "equal!" << "\n";
-        }
-        else if (x*x == -u/v) {
-            std::cout << "opposite!" << "\n";
-        }
-        else {
-            std::cout << "not equal!" << "\n";
-        }
+        int_t x_bit = x.GetValue() & mask;
 
-        int_t x_bit = (x & mask).GetValue();
-
-        if (x_bit != sig_bit) {
-            std::cout << "x_bit != sig_bit\n";
+        if (x_bit == sig_bit) {
             x = -x;
         }
         
@@ -91,17 +68,11 @@ public:
     void SetCurve(int_t a, int_t d) {
         _a = ModInt(a);
         _d = ModInt(d);
-        std::cout << std::dec << "Setting curve: \n";
-        std::cout << "  a: " << _a << "\n";
-        std::cout << "  d: " << _d << "\n";
     }
 
     void SetCurve(ModInt a, ModInt d) {
         _a = a;
         _d = d;
-        std::cout << std::dec << "Setting curve: \n";
-        std::cout << "  a: " << _a << "\n";
-        std::cout << "  d: " << _d << "\n";
     }
 
     ModInt compress() {
@@ -121,7 +92,7 @@ public:
     friend ECPoint operator-(const ECPoint& a);
     friend ECPoint operator-(const ECPoint& a, const ECPoint& b);
     friend ECPoint operator*(const ModInt& k, const ECPoint& P);
-
+    friend std::ostream& operator<<(std::ostream& out, const ECPoint& P);
 };
 
 ECPoint operator+(const ECPoint& a, const ECPoint& b) {
@@ -164,4 +135,8 @@ ECPoint operator*(const ModInt& k, const ECPoint& P) {
     }
     return r;
 
+}
+
+std::ostream& operator<<(std::ostream& out, const ECPoint& P) {
+    return out << "X :" << P._x << "\n" << "Y :" << P._y << "\n";
 }

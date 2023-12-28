@@ -76,7 +76,6 @@ public:
         int512_t s = 0;
 
         int step = 0;
-        std::cout << std::dec;
 
         while (r != 0) {
             ++step;
@@ -86,20 +85,13 @@ public:
             r = old_r - quot * r;
             s = old_s - quot * s;
             old_r = tmp_r;
-            old_s= tmp_s;
+            old_s = tmp_s;
         }
 
         if (old_s < 0) {
             old_s += ModInt::_q;
         }
         
-        if (ModInt((int_t)old_s) * ModInt(_field) == ModInt(1)) {
-            std::cout << "reverse successful! " << (ModInt((int_t)old_s) * ModInt(_field))._field << "\n\n\n";
-        }
-        else {
-            std::cout << "reverse unsuccessful! " << (ModInt((int_t)old_s) * ModInt(_field))._field << "\n\n\n";
-        }
-
         if (old_r == 1) {
             return ModInt((int_t)old_s);
         }
@@ -107,10 +99,10 @@ public:
     }
 
     void Mod() {
-        _field %= _q;
-        if (_field < 0) {
-            _field += _q;
-        }
+        // _field %= _q;
+        // if (_field < 0) {
+        //     _field += _q;
+        // }
     }
 
     bool IsEven() {
@@ -181,7 +173,6 @@ ModInt operator/(const ModInt& a, const ModInt& b) {
 }
 
 ModInt pow(const ModInt& a, const ModInt& b) {
-    // std::cout << "here\n";
     std::vector<short> bin_array;
     int_t tmp = b._field;
     bin_array.push_back((short)(tmp % 2));
@@ -192,11 +183,6 @@ ModInt pow(const ModInt& a, const ModInt& b) {
     }
     bin_array.push_back((short)tmp);
     
-    // for (int i = 0; i < bin_array.size(); i++) {
-    //     std::cout << bin_array[i] << " ";
-    // }
-    // std::cout << std::endl;
-
     ModInt r = ModInt(1);
     ModInt m = ModInt(a._field);
 
